@@ -16,3 +16,11 @@ body{
     font-weight: normal;
     display: flex;
 }
+
+.nodesColumn{
+    margin-right: -2px;
+}
+
+.nodeItem{
+    margin-bottom: -2px;
+}

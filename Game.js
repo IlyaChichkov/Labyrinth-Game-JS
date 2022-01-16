@@ -22,10 +22,11 @@ class Node{
         this.nodeType = nodeType.toString()
         this.node = null
         this.visible = false
+        this.attribute = []
     }
 }
 
-let playerVictory = false
+let gameEnded = false
 let maxPlayerHealth = 5;
 let playerHealth = 5;
 
@@ -37,18 +38,21 @@ wallChar = '🟪'
 emptyChar = '⬜'
 fogOfWarChar = '⬛'
 playerChar = '🥺'
+playerVictoryChar = '😃'
+playerDefeatChar = '☠️'
 finishChar = '🔑'
+floorTrapChar = '🕸️'
 healthChar = '❤️'
 
 startPos = new Vector2D(getRandomInt(1, width - 2), getRandomInt(1, height - 2))
 playerPos = new Vector2D(1, 1)
 
 document.addEventListener('keyup', () => {
-    if(playerVictory) return
+    if(gameEnded) return
     let playerStep = 1;
     switch (event.key) {
         case 'a':
-            if(gMap[playerPos.x - 1][playerPos.y].nodeType === 'empty'){
+            if(gMap[playerPos.x - 1][playerPos.y].nodeType !== 'wall'){
 
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.x -= playerStep
@@ -56,7 +60,7 @@ document.addEventListener('keyup', () => {
             }
             break;
         case 'd':
-            if(gMap[playerPos.x + 1][playerPos.y].nodeType === 'empty'){
+            if(gMap[playerPos.x + 1][playerPos.y].nodeType !== 'wall'){
 
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.x += playerStep
@@ -64,7 +68,7 @@ document.addEventListener('keyup', () => {
             }
             break;
         case 'w':
-            if(gMap[playerPos.x][playerPos.y - 1].nodeType === 'empty'){
+            if(gMap[playerPos.x][playerPos.y - 1].nodeType !== 'wall'){
 
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.y -= playerStep
@@ -72,7 +76,7 @@ document.addEventListener('keyup', () => {
             }
             break;
         case 's':
-            if(gMap[playerPos.x ][playerPos.y + 1].nodeType === 'empty'){
+            if(gMap[playerPos.x ][playerPos.y + 1].nodeType !== 'wall'){
 
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.y += playerStep
@@ -83,15 +87,30 @@ document.addEventListener('keyup', () => {
             ShowMap(false)
             break;
     }
-    CheckPlayerWin();
+    CheckPlayerStep();
 });
 
-function CheckPlayerWin(){
+function CheckPlayerStep(){
     if(playerPos.x === endPoint.x && playerPos.y === endPoint.y){
-        playerVictory = true
+        gameEnded = true
+        gMap[playerPos.x][playerPos.y].attribute.push('victory')
         ShowMap(false)
         document.getElementById('endScreen').style.display = 'block'
         document.getElementById('endTitle').textContent = 'Victory!'
+    }
+
+    if(gMap[playerPos.x][playerPos.y].attribute.includes('floor-trap')){
+        playerHealth--;
+        UpdatePlayerHealth();
+        gMap[playerPos.x][playerPos.y].attribute.push('floor-trap-ex')
+    }
+
+    if(playerHealth <= 0){
+        gameEnded = true
+        gMap[playerPos.x][playerPos.y].attribute.push('defeat')
+        ShowMap(false)
+        document.getElementById('endScreen').style.display = 'block'
+        document.getElementById('endTitle').textContent = 'Defeat!'
     }
 }
 
@@ -101,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 
 function Start() {
-    playerVictory = false
+    gameEnded = false
     playerHealth = maxPlayerHealth
     getStartPosition();
     console.log('Start ' + startPos.x + ' ' + startPos.y)
@@ -185,7 +204,9 @@ async function RecursiveTrace(x, y, distance) {
 
     let dirStepCount = 0;
     let dirArray = [];
-    let extraDoorChance = 20;
+
+    let extraDoorChance = 23;
+    let floorTrapChance = 22;
 
     for(let i = 0; i < 4; i++){
         let dir;
@@ -207,6 +228,9 @@ async function RecursiveTrace(x, y, distance) {
                         })
                     }else if(getRandomInt(0, 100) < extraDoorChance){
                         gMap[x][y - 1].nodeType = 'empty'
+                        if(getRandomInt(0, 100) < floorTrapChance){
+                            gMap[x][y - 1].attribute.push('floor-trap')
+                        }
                     }
                 }
                 break;
@@ -220,6 +244,9 @@ async function RecursiveTrace(x, y, distance) {
                         })
                     }else if(getRandomInt(0, 100) < extraDoorChance){
                         gMap[x + 1][y].nodeType = 'empty'
+                        if(getRandomInt(0, 100) < floorTrapChance){
+                            gMap[x + 1][y].attribute.push('floor-trap')
+                        }
                     }
                 }
                 break;
@@ -233,6 +260,9 @@ async function RecursiveTrace(x, y, distance) {
                         })
                     }else if(getRandomInt(0, 100) < extraDoorChance){
                         gMap[x][y + 1].nodeType = 'empty'
+                        if(getRandomInt(0, 100) < floorTrapChance){
+                            gMap[x][y + 1].attribute.push('floor-trap')
+                        }
                     }
                 }
                 break;
@@ -246,6 +276,9 @@ async function RecursiveTrace(x, y, distance) {
                         })
                     }else if(getRandomInt(0, 100) < extraDoorChance){
                         gMap[x - 1][y].nodeType = 'empty'
+                        if(getRandomInt(0, 100) < floorTrapChance){
+                            gMap[x - 1][y].attribute.push('floor-trap')
+                        }
                     }
                 }
                 break;
@@ -278,9 +311,24 @@ function SetNodeText(x, y, node, fogOfWar = true) {
             break;
         case 'empty':
             node.innerHTML = emptyChar + ' '
+            if(fogOfWar){
+                if(gMap[x][y].attribute.includes('floor-trap-ex')){
+                    node.innerHTML = floorTrapChar + ' '
+                }
+            }else{
+                if(gMap[x][y].attribute.includes('floor-trap')){
+                    node.innerHTML = floorTrapChar + ' '
+                }
+            }
             break;
         case 'player':
             node.innerHTML = playerChar + ' '
+            if(gMap[x][y].attribute.includes('victory')){
+                node.innerHTML = playerVictoryChar + ' '
+            }
+            if(gMap[x][y].attribute.includes('defeat')){
+                node.innerHTML = playerDefeatChar + ' '
+            }
             break;
         case 'finish':
             node.innerHTML = finishChar + ' '
@@ -295,9 +343,11 @@ function ShowMap(applyFogOfWar = true) {
     }
     for (let x = 0; x < gMap.length; x++){
         let nodesLine = document.createElement("div");
+        nodesLine.className = 'nodesColumn'
         for (let y = 0; y < gMap[x].length; y++){
             let node = document.createElement("div");
             node.id = x + '_' + y;
+            node.className = 'nodeItem'
             gMap[x][y].node = node;
             if(!applyFogOfWar){
                 SetNodeText(x, y, node, applyFogOfWar)
