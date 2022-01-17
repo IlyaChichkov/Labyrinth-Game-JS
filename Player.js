@@ -17,7 +17,7 @@ export default class Player {
         this.maxHealth = 5
         this.health = 5
         this.stones = 0
-        this.skills = [{id: 'trapVision', name: 'Trap Vision', desc: 'Allow you to fell and even see traps', lvl: 3}]
+        this.skills = []
         document.getElementById('exp').textContent = 'EXP: ' + this.experience + '/' + this.maxExperience
         this.UpdatePlayerHealth();
     }
