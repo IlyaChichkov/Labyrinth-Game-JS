@@ -1,6 +1,6 @@
 
-import Player from "http://localhost:63342/LabyrinthGame/Player.js";
-import ConsoleWrite from "http://localhost:63342/LabyrinthGame/GameConsole.js";
+import Player from "./Player.js";
+import ConsoleWrite from "./GameConsole.js";
 
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
