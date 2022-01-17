@@ -3,6 +3,11 @@ body{
 
 }
 
+.interface-txt{
+    font-size: 1.2em;
+    font-family: 'Outfit', sans-serif;
+}
+
 .map{
     display: flex;
 }
@@ -23,4 +28,18 @@ body{
 
 .nodeItem{
     margin-bottom: -2px;
+}
+
+#console{
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.console-text{
+    font-size: 1.2em;
+    font-family: 'Outfit', sans-serif;
+}
+
+.fade-console-text{
+    color: gray;
 }

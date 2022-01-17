@@ -1,24 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit&display=swap" rel="stylesheet">
     <meta charset="utf-8">
-    <title>Моя тестовая страница</title>
-    <link rel="stylesheet" type="text/css" href="index.css">
-    <script src="Game.js"></script>
+    <title>Labyrinth!</title>
+    <link href="index.css" rel="stylesheet" type="text/css">
+    <script src="GameConsole.js" type="module"></script>
+    <script src="Player.js" type="module"></script>
+    <script src="Game.js" type="module"></script>
 </head>
 <body style="margin-left: 200px">
-    <h2>Labyrinth Game</h2>
     <div id="interface">
-        <div class="healthContainer">
+        <h2 class="interface-txt">Labyrinth Game</h2>
+        <div class="levelContainer">
+            <div class="infoText interface-txt" id="exp">EXP: 1</div>
+            <div class="infoText interface-txt" id="lvl">LvL: 1</div>
+        </div>
+        <div class="healthContainer interface-txt">
             Health:
-            <div class="health" id="health">Health: </div>
+            <div class="health" id="health"></div>
         </div>
     </div>
     <div class="map" id="map"></div>
     <hr/>
+    <div id="upgrade-bar">
+        <a onclick="player.health++"></a>
+    </div>
     <div class="endScreen" id="endScreen" style="display: none">
         <h3 id="endTitle"></h3>
-        <button onclick="Start();">Retry</button>
+        <button id="next-lvl" style="display: none">Next Level</button>
+        <button id="restart">Retry</button>
+    </div>
+    <div id="console">
+
     </div>
 </body>
 </html>

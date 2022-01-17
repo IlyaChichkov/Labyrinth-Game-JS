@@ -1,4 +1,7 @@
 
+import Player from "http://localhost:63342/LabyrinthGame/Player.js";
+import ConsoleWrite from "http://localhost:63342/LabyrinthGame/GameConsole.js";
+
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
 }
@@ -26,37 +29,48 @@ class Node{
     }
 }
 
-let gameEnded = false
-let maxPlayerHealth = 5;
-let playerHealth = 5;
+class Game{
+    constructor() {
+        this.level = 1
+        this.gameEnded = false
+        this.extraDoorChance = 23;
+        this.floorTrapChance = 12;
+        document.getElementById('lvl').textContent = 'LvL: ' + this.level
+    }
+}
+
+let game;
+let player;
 
 let width = 31;
 let height = 17;
 let gMap = []
 
-wallChar = '🟪'
-emptyChar = '⬜'
-fogOfWarChar = '⬛'
-playerChar = '🥺'
-playerVictoryChar = '😃'
-playerDefeatChar = '☠️'
-finishChar = '🔑'
-floorTrapChar = '🕸️'
-healthChar = '❤️'
+let wallChar = '🟪'
+let emptyChar = '⬜'
+let fogOfWarChar = '⬛'
+let playerChar = '🥺'
+let playerVictoryChar = '😃'
+let playerDefeatChar = '☠️'
+let finishChar = '🔑'
+let floorTrapChar = '🕸️'
 
-startPos = new Vector2D(getRandomInt(1, width - 2), getRandomInt(1, height - 2))
-playerPos = new Vector2D(1, 1)
+let startPos = new Vector2D(getRandomInt(1, width - 2), getRandomInt(1, height - 2))
+let playerPos = new Vector2D(1, 1)
+
 
 document.addEventListener('keyup', () => {
-    if(gameEnded) return
-    let playerStep = 1;
+    if(game.gameEnded) return
+    let playerStep = 1
+    let playerMoved = false
+    //console.log(event.key)
     switch (event.key) {
         case 'a':
             if(gMap[playerPos.x - 1][playerPos.y].nodeType !== 'wall'){
-
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.x -= playerStep
                 SetMapNodeState(playerPos.x, playerPos.y, 'player')
+                playerMoved = true
             }
             break;
         case 'd':
@@ -65,6 +79,7 @@ document.addEventListener('keyup', () => {
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.x += playerStep
                 SetMapNodeState(playerPos.x, playerPos.y, 'player')
+                playerMoved = true
             }
             break;
         case 'w':
@@ -73,6 +88,7 @@ document.addEventListener('keyup', () => {
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.y -= playerStep
                 SetMapNodeState(playerPos.x, playerPos.y, 'player')
+                playerMoved = true
             }
             break;
         case 's':
@@ -81,66 +97,159 @@ document.addEventListener('keyup', () => {
                 SetMapNodeState(playerPos.x, playerPos.y, 'empty')
                 playerPos.y += playerStep
                 SetMapNodeState(playerPos.x, playerPos.y, 'player')
+                playerMoved = true
             }
             break;
         case 'f':
+            ConsoleWrite('> Cheat Fog Of War')
             ShowMap(false)
             break;
+        case 'e':
+            ConsoleWrite('> Cheat Experience')
+            player.AddExperience(100)
+            break;
+        case 'g':
+            NextLevel()
+            break;
+        case 'r':
+            Start()
+            break;
     }
-    CheckPlayerStep();
+    if(playerMoved) CheckPlayerStep();
 });
 
 function CheckPlayerStep(){
     if(playerPos.x === endPoint.x && playerPos.y === endPoint.y){
-        gameEnded = true
+        game.gameEnded = true
         gMap[playerPos.x][playerPos.y].attribute.push('victory')
         ShowMap(false)
+        document.getElementById('next-lvl').style.display = 'block'
         document.getElementById('endScreen').style.display = 'block'
         document.getElementById('endTitle').textContent = 'Victory!'
     }
 
     if(gMap[playerPos.x][playerPos.y].attribute.includes('floor-trap')){
-        playerHealth--;
-        UpdatePlayerHealth();
+        ConsoleWrite('You stepped in trap! ')
+        player.ChangeHealth(-1)
+        player.AddExperience(player.expFromTrap)
         gMap[playerPos.x][playerPos.y].attribute.push('floor-trap-ex')
     }
 
-    if(playerHealth <= 0){
-        gameEnded = true
+    if(player.health <= 0){
+        game.gameEnded = true
         gMap[playerPos.x][playerPos.y].attribute.push('defeat')
         ShowMap(false)
         document.getElementById('endScreen').style.display = 'block'
         document.getElementById('endTitle').textContent = 'Defeat!'
     }
+
+    TrapsCheck(playerPos.x, playerPos.y, 2);
+}
+
+function TrapsCheck(x, y, distance){
+    if(distance < 1) return
+    distance--
+
+    if(gMap[x + 1][y].nodeType === 'empty'){
+        if(gMap[x + 1][y].attribute.includes('floor-trap')){
+            InformAboutTrap('right')
+        }
+        TrapsCheck(x + 1, y, distance - 1);
+    }
+
+    if(gMap[x - 1][y].nodeType === 'empty'){
+        if(gMap[x - 1][y].attribute.includes('floor-trap')){
+            InformAboutTrap('left')
+        }
+        TrapsCheck(x - 1, y, distance - 1);
+    }
+
+    if(gMap[x][y + 1].nodeType === 'empty'){
+        if(gMap[x][y + 1].attribute.includes('floor-trap')){
+            InformAboutTrap('down')
+        }
+        TrapsCheck(x, y + 1, distance - 1);
+    }
+
+    if(gMap[x][y - 1].nodeType === 'empty'){
+        if(gMap[x][y - 1].attribute.includes('floor-trap')){
+            InformAboutTrap('up')
+        }
+        TrapsCheck(x, y - 1, distance - 1);
+    }
+}
+
+function InformAboutTrap(direction){
+    console.log(player.skills)
+    if(!player.HasSkill('trapVision')) return
+    switch (player.GetSkill('trapVision').lvl) {
+        case 1:
+            ConsoleWrite('You feel trap near this place...')
+            break;
+        case 2:
+            ConsoleWrite('You feel trap from ' + direction)
+            break;
+        case 3:
+            ConsoleWrite('You see trap ' + direction)
+            RevealTrap(direction)
+            break;
+    }
+}
+
+function RevealTrap(direction){
+    console.log(direction)
+    switch (direction) {
+        case 'right':
+            gMap[playerPos.x + 1][playerPos.y].attribute.push('floor-trap-ex')
+            UpdateMapElement(playerPos.x + 1, playerPos.y)
+            break;
+        case 'left':
+            gMap[playerPos.x - 1][playerPos.y].attribute.push('floor-trap-ex')
+            UpdateMapElement(playerPos.x - 1, playerPos.y)
+            break;
+        case 'up':
+            gMap[playerPos.x][playerPos.y - 1].attribute.push('floor-trap-ex')
+            UpdateMapElement(playerPos.x, playerPos.y - 1)
+            break;
+        case 'down':
+            gMap[playerPos.x][playerPos.y + 1].attribute.push('floor-trap-ex')
+            UpdateMapElement(playerPos.x, playerPos.y + 1)
+            break;
+    }
 }
 
 document.addEventListener("DOMContentLoaded", function(){
 
+    document.getElementById('restart').addEventListener('click', () => {Start();})
     Start();
 });
 
-function Start() {
-    gameEnded = false
-    playerHealth = maxPlayerHealth
+function NextLevel() {
+    player.AddExperience(game.level * 5)
+    game.level++
+    game.gameEnded = false
+    document.getElementById('lvl').textContent = 'LvL: ' + game.level
+    game.floorTrapChance += game.level * 3;
+    GenerateLevel()
+}
+
+function GenerateLevel() {
+
+
+    game.gameEnded = false
+    player.health = player.maxHealth
     getStartPosition();
     console.log('Start ' + startPos.x + ' ' + startPos.y)
     MapArrayPrepare()
     CreateLabyrinth();
     ShowMap();
-
-    UpdatePlayerHealth();
 }
 
-function UpdatePlayerHealth() {
-    let healthContainer = document.getElementById('health')
-    while (healthContainer.firstChild){
-        healthContainer.removeChild(healthContainer.firstChild)
-    }
-    for(let i = 0; i < playerHealth; i++){
-        let health = document.createElement("div");
-        health.textContent = healthChar
-        healthContainer.appendChild(health)
-    }
+function Start() {
+    game = new Game()
+    player = new Player()
+    document.getElementById('next-lvl').addEventListener('click', () => { NextLevel(); })
+    GenerateLevel()
 }
 
 function MapArrayPrepare() {
@@ -205,9 +314,6 @@ async function RecursiveTrace(x, y, distance) {
     let dirStepCount = 0;
     let dirArray = [];
 
-    let extraDoorChance = 23;
-    let floorTrapChance = 22;
-
     for(let i = 0; i < 4; i++){
         let dir;
         do{
@@ -226,9 +332,9 @@ async function RecursiveTrace(x, y, distance) {
                             RecursiveTrace(x, y - 2, distance)
                             resolve(true);
                         })
-                    }else if(getRandomInt(0, 100) < extraDoorChance){
+                    }else if(getRandomInt(0, 100) < game.extraDoorChance){
                         gMap[x][y - 1].nodeType = 'empty'
-                        if(getRandomInt(0, 100) < floorTrapChance){
+                        if(getRandomInt(0, 100) < game.floorTrapChance){
                             gMap[x][y - 1].attribute.push('floor-trap')
                         }
                     }
@@ -242,9 +348,9 @@ async function RecursiveTrace(x, y, distance) {
                             RecursiveTrace(x + 2, y, distance)
                             resolve(true);
                         })
-                    }else if(getRandomInt(0, 100) < extraDoorChance){
+                    }else if(getRandomInt(0, 100) < game.extraDoorChance){
                         gMap[x + 1][y].nodeType = 'empty'
-                        if(getRandomInt(0, 100) < floorTrapChance){
+                        if(getRandomInt(0, 100) < game.floorTrapChance){
                             gMap[x + 1][y].attribute.push('floor-trap')
                         }
                     }
@@ -258,9 +364,9 @@ async function RecursiveTrace(x, y, distance) {
                             RecursiveTrace(x, y + 2, distance)
                             resolve(true);
                         })
-                    }else if(getRandomInt(0, 100) < extraDoorChance){
+                    }else if(getRandomInt(0, 100) < game.extraDoorChance){
                         gMap[x][y + 1].nodeType = 'empty'
-                        if(getRandomInt(0, 100) < floorTrapChance){
+                        if(getRandomInt(0, 100) < game.floorTrapChance){
                             gMap[x][y + 1].attribute.push('floor-trap')
                         }
                     }
@@ -274,9 +380,9 @@ async function RecursiveTrace(x, y, distance) {
                             RecursiveTrace(x - 2, y, distance)
                             resolve(true);
                         })
-                    }else if(getRandomInt(0, 100) < extraDoorChance){
+                    }else if(getRandomInt(0, 100) < game.extraDoorChance){
                         gMap[x - 1][y].nodeType = 'empty'
-                        if(getRandomInt(0, 100) < floorTrapChance){
+                        if(getRandomInt(0, 100) < game.floorTrapChance){
                             gMap[x - 1][y].attribute.push('floor-trap')
                         }
                     }
@@ -301,7 +407,7 @@ function UpdateMapElement(elementX, elementY) {
 
 function SetNodeText(x, y, node, fogOfWar = true) {
 
-    if(!gMap[x][y].visible && fogOfWar){
+    if(!gMap[x][y].visible && fogOfWar && !gMap[x][y].attribute.includes('discovered')){
         node.innerHTML = fogOfWarChar + ' '
         return
     }
@@ -370,7 +476,7 @@ function UpdateFogOfWar() {
     for (let x = 0; x < gMap.length; x++){
         for (let y = 0; y < gMap[x].length; y++){
             if(Math.abs(x - playerPos.x) <= fogRange && Math.abs(y - playerPos.y) <= fogRange){
-                gMap[x][y].visible = true;
+                DiscoverNode(x, y)
             }else{
                 gMap[x][y].visible = false;
             }
@@ -382,13 +488,11 @@ function UpdateFogOfWar() {
     // Right
     for (let x = playerPos.x + 1; x < gMap.length; x++){
         if(gMap[x][playerPos.y].nodeType === 'wall' || visionRange > visionMaxRange - 1) {
-            gMap[x][playerPos.y].visible = true
-            UpdateMapElement(x, playerPos.y)
+            DiscoverNode(x, playerPos.y)
             break
         }
-        gMap[x][playerPos.y].visible = true
-        UpdateMapElement(x, playerPos.y)
-        /*
+        DiscoverNode(x, playerPos.y)
+        /* FEATURE
         if(gMap[x][playerPos.y + 1].nodeType === 'wall'){
             gMap[x][playerPos.y + 1].visible = true
             UpdateMapElement(x, playerPos.y + 1)
@@ -403,36 +507,30 @@ function UpdateFogOfWar() {
     visionRange = 1
     for (let x = playerPos.x - 1; x > 0; x--){
         if(gMap[x][playerPos.y].nodeType === 'wall' || visionRange > visionMaxRange - 1) {
-            gMap[x][playerPos.y].visible = true
-            UpdateMapElement(x, playerPos.y)
+            DiscoverNode(x, playerPos.y)
             break
         }
-        gMap[x][playerPos.y].visible = true
-        UpdateMapElement(x, playerPos.y)
+        DiscoverNode(x, playerPos.y)
         visionRange++
     }
     //Up
     visionRange = 1
     for (let y = playerPos.y + 1; y < gMap[playerPos.x].length; y++){
         if(gMap[playerPos.x][y].nodeType === 'wall' || visionRange > visionMaxRange - 1) {
-            gMap[playerPos.x][y].visible = true
-            UpdateMapElement(playerPos.x, y)
+            DiscoverNode(playerPos.x, y)
             break
         }
-        gMap[playerPos.x][y].visible = true
-        UpdateMapElement(playerPos.x, y)
+        DiscoverNode(playerPos.x, y)
         visionRange++
     }
     //Down
     visionRange = 1
     for (let y = playerPos.y - 1; y > 0; y--){
         if(gMap[playerPos.x][y].nodeType === 'wall' || visionRange > visionMaxRange - 1) {
-            gMap[playerPos.x][y].visible = true
-            UpdateMapElement(playerPos.x, y)
+            DiscoverNode(playerPos.x, y)
             break
         }
-        gMap[playerPos.x][y].visible = true
-        UpdateMapElement(playerPos.x, y)
+        DiscoverNode(playerPos.x, y)
         visionRange++
     }
 
@@ -445,4 +543,10 @@ function UpdateFogOfWar() {
             UpdateMapElement(x, y)
         }
     }*/
+}
+
+function DiscoverNode(x, y) {
+    gMap[x][y].visible = true
+    gMap[x][y].attribute.push('discovered')
+    UpdateMapElement(x, y)
 }
