@@ -1,6 +1,6 @@
 
 import Player from "http://localhost:63342/LabyrinthGame/Player.js";
-import ConsoleWrite from "http://localhost:63342/LabyrinthGame/GameConsole.js";
+import Console from "http://localhost:63342/LabyrinthGame/GameConsole.js";
 
 function getRandom(min, max) {
     return Math.random() * (max - min) + min;
@@ -101,11 +101,11 @@ document.addEventListener('keyup', () => {
             }
             break;
         case 'f':
-            ConsoleWrite('> Cheat Fog Of War')
+            Console.Write('> Cheat Fog Of War')
             ShowMap(false)
             break;
         case 'e':
-            ConsoleWrite('> Cheat Experience')
+            Console.Write('> Cheat Experience')
             player.AddExperience(100)
             break;
         case 'g':
@@ -129,7 +129,7 @@ function CheckPlayerStep(){
     }
 
     if(gMap[playerPos.x][playerPos.y].attribute.includes('floor-trap')){
-        ConsoleWrite('You stepped in trap! ')
+        Console.Write('You stepped in trap! ')
         player.ChangeHealth(-1)
         player.AddExperience(player.expFromTrap)
         gMap[playerPos.x][playerPos.y].attribute.push('floor-trap-ex')
@@ -144,6 +144,37 @@ function CheckPlayerStep(){
     }
 
     TrapsCheck(playerPos.x, playerPos.y, 2);
+}
+
+function ThrowStone(dir) {
+    Console.Write('You throw stone')
+    switch (dir) {
+        case 'Up':
+            if(gMap[playerPos.x][playerPos.y - 1].attribute.includes('floor-trap')){
+                gMap[playerPos.x][playerPos.y - 1].attribute.push('floor-trap-ex')
+                UpdateMapElement(playerPos.x, playerPos.y - 1)
+            }
+            break;
+        case 'Right':
+            if(gMap[playerPos.x + 1][playerPos.y].attribute.includes('floor-trap')){
+                gMap[playerPos.x + 1][playerPos.y].attribute.push('floor-trap-ex')
+                UpdateMapElement(playerPos.x + 1, playerPos.y)
+            }
+            break;
+        case 'Down':
+            if(gMap[playerPos.x][playerPos.y + 1].attribute.includes('floor-trap')){
+                gMap[playerPos.x][playerPos.y + 1].attribute.push('floor-trap-ex')
+                UpdateMapElement(playerPos.x, playerPos.y + 1)
+            }
+            break;
+        case 'Left':
+            if(gMap[playerPos.x - 1][playerPos.y].attribute.includes('floor-trap')){
+                gMap[playerPos.x - 1][playerPos.y].attribute.push('floor-trap-ex')
+                UpdateMapElement(playerPos.x - 1, playerPos.y)
+            }
+            break;
+    }
+    player.AddStones(-1)
 }
 
 function TrapsCheck(x, y, distance){
@@ -184,13 +215,23 @@ function InformAboutTrap(direction){
     if(!player.HasSkill('trapVision')) return
     switch (player.GetSkill('trapVision').lvl) {
         case 1:
-            ConsoleWrite('You feel trap near this place...')
+            Console.Write('You feel trap near this place...')
+            if(player.stones > 0){
+                let actions = [{ name: 'Throw Up', action: ThrowStone, arg: 'Up' }, { name: 'Throw Right', action: ThrowStone, arg: 'Right' },
+                    { name: 'Throw Down', action: ThrowStone, arg: 'Down' }, { name: 'Throw Left', action: ThrowStone, arg: 'Left' }]
+                Console.ActionMenu(`You have ${player.stones} stones`, actions)
+            }
             break;
         case 2:
-            ConsoleWrite('You feel trap from ' + direction)
+            Console.Write('You feel trap from ' + direction)
+            if(player.stones > 0){
+                let actions = [{ name: 'Throw Up', action: ThrowStone, arg: 'Up' }, { name: 'Throw Right', action: ThrowStone, arg: 'Right' },
+                    { name: 'Throw Down', action: ThrowStone, arg: 'Down' }, { name: 'Throw Left', action: ThrowStone, arg: 'Left' }]
+                Console.ActionMenu(`You have ${player.stones} stones`, actions)
+            }
             break;
         case 3:
-            ConsoleWrite('You see trap ' + direction)
+            Console.Write('You see trap ' + direction)
             RevealTrap(direction)
             break;
     }
@@ -546,6 +587,7 @@ function UpdateFogOfWar() {
 }
 
 function DiscoverNode(x, y) {
+    if(gMap[x][y].attribute.includes('discovered')) return
     gMap[x][y].visible = true
     gMap[x][y].attribute.push('discovered')
     UpdateMapElement(x, y)

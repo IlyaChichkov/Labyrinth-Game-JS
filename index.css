@@ -12,7 +12,7 @@ body{
     display: flex;
 }
 
-.healthContainer{
+.itemContainer{
     display: flex;
     font-weight: bold;
 }

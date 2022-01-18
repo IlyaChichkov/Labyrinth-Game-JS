@@ -17,7 +17,7 @@ export default class Player {
         this.maxHealth = 5
         this.health = 5
         this.stones = 0
-        this.skills = [{id: 'trapVision', name: 'Trap Vision', desc: 'Allow you to fell and even see traps', lvl: 3}]
+        this.skills = []
         document.getElementById('exp').textContent = 'EXP: ' + this.experience + '/' + this.maxExperience
         this.UpdatePlayerHealth();
     }
@@ -75,11 +75,25 @@ export default class Player {
             let item = document.createElement('button')
             item.textContent = 'Upgrade ' + levelUpItems[itemId].name
             item.href = ''
+            item.title = levelUpItems[itemId].desc
             item.value = levelUpItems[itemId].id
             item.addEventListener('click', (e) => {
                 this.ChooseUpgrade(e.target.value)
             })
             bar.appendChild(item)
+        }
+    }
+
+    AddStones(val){
+        this.stones += val
+        let stonesContainer = document.getElementById('stones')
+        while (stonesContainer.firstChild){
+            stonesContainer.removeChild(stonesContainer.firstChild)
+        }
+        for(let i = 0; i < this.stones; i++){
+            let stone = document.createElement("div");
+            stone.textContent = this.stoneChar
+            stonesContainer.appendChild(stone)
         }
     }
 
@@ -103,6 +117,9 @@ export default class Player {
                 break;
             case 'moreExp':
                 this.AddSkill(itemName)
+                break;
+            case 'stones':
+                this.AddStones(this.GetLevelUpItem(itemName).count)
                 break;
         }
 
@@ -137,6 +154,14 @@ export default class Player {
             }
         }
     }
+
+    GetLevelUpItem(itemId){
+        for (let i = 0; i < levelUpItems.length; i++){
+            if(levelUpItems[i].id === itemId){
+                return levelUpItems[i]
+            }
+        }
+    }
 }
 
 let levelUpItems = [
@@ -144,5 +169,5 @@ let levelUpItems = [
     {id: 'maxHealth', name: 'Max Health', desc: 'Increase your maximum health value'},
     {id: 'trapVision', name: 'Trap Vision', desc: 'Allow you to fell and even see traps', lvl: 1},
     {id: 'moreExp', name: 'More Experience', desc: 'You get more experience'},
-    {id: 'stones', name: 'Stones', desc: 'Gives you some stones to throw', count: 5}
+    {id: 'stones', name: 'Stones', desc: 'Gives you some stones to throw. Works with at least 1 lvl of traps vision', count: 5}
 ]
