@@ -11,35 +11,36 @@
     <script src="Player.js" type="module"></script>
     <script src="Game.js" type="module"></script>
 </head>
-<body style="margin-left: 200px">
-    <div id="interface">
-        <h2 class="interface-txt">Labyrinth Game</h2>
-        <div class="levelContainer">
-            <div class="infoText interface-txt" id="exp">EXP: 1</div>
-            <div class="infoText interface-txt" id="lvl">LvL: 1</div>
+<body>
+    <div class="game">
+        <div id="interface">
+            <h2 class="interface-title">Labyrinth Game</h2>
+            <div class="levelContainer">
+                <div class="infoText interface-txt" id="exp">EXP: 0</div>
+                <div class="infoText interface-txt" id="lvl">LvL: 1</div>
+            </div>
+            <div class="itemContainer interface-txt">
+                Health:
+                <div class="health" id="health"></div>
+            </div>
+            <div class="itemContainer interface-txt">
+                Stones:
+                <div class="health" id="stones"></div>
+            </div>
         </div>
-        <div class="itemContainer interface-txt">
-            Health:
-            <div class="health" id="health"></div>
-        </div>
-        <div class="itemContainer interface-txt">
-            Stones:
-            <div class="health" id="stones"></div>
-        </div>
-    </div>
-    <div class="map" id="map"></div>
-    <hr/>
-    <div id="upgrade-bar">
-        <a onclick="player.health++"></a>
-    </div>
-    <div class="endScreen" id="endScreen" style="display: none">
-        <h3 id="endTitle"></h3>
-        <button id="next-lvl" style="display: none">Next Level</button>
-        <button id="restart">Retry</button>
-    </div>
-    <div id="console">
+        <div class="map" id="map"></div>
 
+        <div id="upgrade-bar">
+            <a onclick="player.health++"></a>
+        </div>
+        <div class="endScreen" id="endScreen" style="display: none">
+            <h3 class="interface-title" id="endTitle"></h3>
+            <button id="next-lvl" style="display: none">Next Level</button>
+            <button id="restart">Retry</button>
+        </div>
+        <div id="console">
+
+        </div>
     </div>
-    <button onclick="ThrowStone('Up')">Up</button>
 </body>
 </html>

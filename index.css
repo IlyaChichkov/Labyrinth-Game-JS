@@ -1,6 +1,8 @@
 
 body{
-
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .interface-txt{
@@ -8,8 +10,15 @@ body{
     font-family: 'Outfit', sans-serif;
 }
 
+.interface-title{
+    text-align: center;
+    font-size: 1.3em;
+    font-family: 'Outfit', sans-serif;
+}
+
 .map{
     display: flex;
+    margin-bottom: 30px;
 }
 
 .itemContainer{
@@ -42,4 +51,34 @@ body{
 
 .fade-console-text{
     color: gray;
+}
+
+.endScreen{
+    display: flex;
+    flex-direction: column;
+}
+
+button{
+    font-size: 1.2em;
+    font-family: 'Outfit', sans-serif;
+    padding: 8px 22px;
+    margin: 4px;
+    border: none;
+    background-color: #b3aae5;
+    box-shadow: none;
+    transition: 0.4s;
+}
+
+button:active{
+    font-size: 1.2em;
+    font-family: 'Outfit', sans-serif;
+    padding: 8px 22px;
+    color: white;
+    border: none;
+    background-color: #1f1847;
+    box-shadow: none;
+}
+
+button:hover{
+    box-shadow: 1px 1px 8px #4e4358;
 }

@@ -11,6 +11,7 @@ export default class Player {
     stoneChar = '🧱'
 
     constructor() {
+        this.level = 1
         this.maxExperience = 10
         this.experience = 0
         this.expFromTrap = 5
@@ -33,6 +34,7 @@ export default class Player {
 
     CheckLevelUp(){
         if(this.experience >= this.maxExperience){
+            this.level++
             this.experience = this.experience - this.maxExperience
             this.maxExperience = Math.round(Math.pow(this.maxExperience, 1.1))
             this.ShowUpgradeBar()
@@ -63,17 +65,24 @@ export default class Player {
 
     ShowUpgradeBar(){
         let bar = document.getElementById('upgrade-bar')
+        while (bar.firstChild){
+            bar.removeChild(bar.firstChild)
+        }
 
         let itemId
         let itemsToChoose = []
 
+        let title = document.createElement('h3')
+        title.className = 'interface-title'
+        title.textContent = `Level up to ${this.level}!`
+        bar.appendChild(title)
         for (let i = 0; i < 3; i++){
             do{
                 itemId = getRandomInt(0, levelUpItems.length - 1)
             }while (itemsToChoose.includes(itemId))
             itemsToChoose.push(itemId)
             let item = document.createElement('button')
-            item.textContent = 'Upgrade ' + levelUpItems[itemId].name
+            item.textContent = levelUpItems[itemId].name
             item.href = ''
             item.title = levelUpItems[itemId].desc
             item.value = levelUpItems[itemId].id
